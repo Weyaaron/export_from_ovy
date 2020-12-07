@@ -2,6 +2,12 @@ Scripts/*
 
 *.db
 
+*.csv
+
+*.pdf
+
+
+
 rawdata
 
 html/*

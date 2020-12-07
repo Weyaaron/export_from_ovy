@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 class Zyklus:
     def __init__(self, raw_list: list) -> None:
         self.raw_list = raw_list
@@ -55,11 +58,15 @@ class Zyklus:
         date_str = date_str.split("UHR")[0]
         continuous_date = date_str.replace(".\n", ",")
         date_split = continuous_date.split(".")
-        for date_el in date_split:
+        for date_el in [el for el in date_split if len(el) > 2]:
+            date_el = date_el.strip()
             final_val = date_el.replace(",", ".")
             if len(final_val) == 5:
                 final_val = final_val + self.year
                 self.date_list.append(final_val)
+            else:
+                print(final_val)
+                raise ValueError
 
     def extract_times(self):
         time_str = self.raw_list[3].split("UHRZEIT")[1].split("37,00")[0]

@@ -4,7 +4,7 @@ from py_pdf_parser.loaders import load_file
 
 from py_pdf_parser import tables
 
-from zyklus import Zyklus
+from src.zyklus import Zyklus
 
 
 def load():
