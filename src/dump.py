@@ -1,12 +1,12 @@
-
 def teste():
     pass
 
     import PyPDF2
     from nltk.tokenize import word_tokenize
     from nltk.corpus import stopwords
-    filename = 'Data.pdf'
-    pdfFileObj = open(filename,'rb')
+
+    filename = "Data.pdf"
+    pdfFileObj = open(filename, "rb")
     pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
 
     num_pages = pdfReader.numPages
@@ -20,14 +20,12 @@ def teste():
     print(text)
 
 
-
 def testd():
     import pdftotext
 
     # Load your PDF
     with open("Data.pdf", "rb") as f:
         pdf = pdftotext.PDF(f)
-
 
     # How many pages?
     print(len(pdf))
@@ -44,46 +42,29 @@ def testd():
     print("\n\n".join(pdf))
 
 
-
 def testc():
-    for i in range(0,100):
-        table = tabula.read_pdf('Data.pdf', pages=i)
-        table[0].to_csv("./data/test"+ str(i)+".csv")
-        print("Done "+str(i))
+    for i in range(0, 100):
+        table = tabula.read_pdf("Data.pdf", pages=i)
+        table[0].to_csv("./data/test" + str(i) + ".csv")
+        print("Done " + str(i))
 
-  #  print(table[0].to_csv())
 
+#  print(table[0].to_csv())
 
 
 def testb():
 
     table_list = []
-    for i in range(0,2):
+    for i in range(0, 2):
 
-        tables2 = camelot.read_pdf('Data.pdf', flavor='stream', pages=str(i))
+        tables2 = camelot.read_pdf("Data.pdf", flavor="stream", pages=str(i))
         table_list.append(tables2[0])
-
 
     print(table_list[0])
     pass
-
 
 
 from io import StringIO
 
 from pdfminer.high_level import extract_text_to_fp
 from pdfminer.layout import LAParams
-
-
-
-
-def testa():
-    pass
-
-
-    output = StringIO()
-    with open('Data.pdf', 'rb') as pdf_file:
-        extract_text_to_fp(pdf_file, output, laparams=LAParams(), output_type='html', codec=None)
-    with open('example.html', 'a') as html_file:
-        html_file.write(output.getvalue())
-
