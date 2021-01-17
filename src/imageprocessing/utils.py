@@ -16,7 +16,6 @@ def load_images_from_path(path:Path)->List:
 
         result.append(Image.open(file_el))
 
-
     return result
 
 

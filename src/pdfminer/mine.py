@@ -1,3 +1,4 @@
+import re
 from typing import List
 
 from pdfminer.pdfparser import PDFParser
@@ -19,8 +20,10 @@ def parse_obj(lt_objs) -> List[tuple]:
 
         # if it's a textbox, print text and location
         if isinstance(obj, pdfminer.layout.LTTextBoxHorizontal):
-            text = obj.get_text().replace("\n", "_")
-            result.append((obj.bbox[0], obj.bbox[1], text))
+            text = obj.get_text().strip("\n").strip(" ")
+            text = text.replace("\n", "")
+
+            result.append((int(obj.bbox[0]), int(obj.bbox[1]), text))
             # print("%6d, %6d, %s" % (obj.bbox[0], obj.bbox[1], text))
 
             # if it's a container, recurse
@@ -59,6 +62,13 @@ def parse_doc(doc: PDFDocument, page_nbr: int) -> List[tuple]:
     return doc_result
 
 
+def extract_dates(koordinate_list: List[tuple]) -> List[tuple]:
+
+    regex = re.compile('[0-9]{2}\.[0-9]{2}\.')
+
+    return [el for el in koordinate_list if re.fullmatch(regex, el[2])]
+
+
 def loadvalue_page_date(pdf_path: Path, page: int, date: str) -> str:
     with open(pdf_path, "rb") as file:
         # Create a PDF parser object associated with the file object.
@@ -69,5 +79,19 @@ def loadvalue_page_date(pdf_path: Path, page: int, date: str) -> str:
         document = PDFDocument(parser)
 
         result = parse_doc(document, page)
+
+        s_values = [el for el in result if el[2] == "S"]
+
+        for s_value_el in s_values:
+            for tuple_el in result:
+                if abs(s_value_el[0] - tuple_el[0]) < 5:
+                    pass
+                    # print(tuple_el)
+                    # print("!")
+
+        date_tuples = extract_dates(result)
+        for el in date_tuples:
+            print(el)
+        exit(-1)
         for el in result:
-            print(result)
+            print(el[2])
