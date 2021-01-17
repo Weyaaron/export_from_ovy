@@ -1,101 +1,73 @@
+from typing import List
+
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfpage import PDFPage
-from pdfminer.pdfpage import PDFTextExtractionNotAllowed
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfinterp import PDFPageInterpreter
-from pdfminer.pdfdevice import PDFDevice
 from pdfminer.layout import LAParams
 from pdfminer.converter import PDFPageAggregator
 import pdfminer
 
-# Open a PDF file.
-fp = open('data.pdf', 'rb')
+from pathlib import Path
 
-# Create a PDF parser object associated with the file object.
-parser = PDFParser(fp)
 
-# Create a PDF document object that stores the document structure.
-# Password for initialization as 2nd parameter
-document = PDFDocument(parser)
-
-# Check if the document allows text extraction. If not, abort.
-if not document.is_extractable:
-    raise PDFTextExtractionNotAllowed
-
-# Create a PDF resource manager object that stores shared resources.
-rsrcmgr = PDFResourceManager()
-
-# Create a PDF device object.
-device = PDFDevice(rsrcmgr)
-
-# BEGIN LAYOUT ANALYSIS
-# Set parameters for analysis.
-laparams = LAParams()
-
-# Create a PDF page aggregator object.
-device = PDFPageAggregator(rsrcmgr, laparams=laparams)
-
-# Create a PDF interpreter object.
-interpreter = PDFPageInterpreter(rsrcmgr, device)
-
-def parse_obj(lt_objs):
-
+def parse_obj(lt_objs) -> List[tuple]:
+    result = []
     # loop over the object list
     for obj in lt_objs:
 
         # if it's a textbox, print text and location
         if isinstance(obj, pdfminer.layout.LTTextBoxHorizontal):
-            print( "%6d, %6d, %s" % (obj.bbox[0], obj.bbox[1], obj.get_text().replace('\n', '_')))
+            text = obj.get_text().replace("\n", "_")
+            result.append((obj.bbox[0], obj.bbox[1], text))
+            # print("%6d, %6d, %s" % (obj.bbox[0], obj.bbox[1], text))
 
-        # if it's a container, recurse
+            # if it's a container, recurse
         elif isinstance(obj, pdfminer.layout.LTFigure):
-            parse_obj(obj._objs)
+            result.extend(parse_obj(obj._objs))
 
-# loop over all pages in the document
-for page in PDFPage.create_pages(document):
+    return result
 
-    # read the page into a layout object
-    interpreter.process_page(page)
+
+def parse_doc(doc: PDFDocument, page_nbr: int) -> List[tuple]:
+    # Create a PDF resource manager object that stores shared resources.
+    rsrcmgr = PDFResourceManager()
+
+    # Set parameters for analysis.
+    laparams = LAParams()
+
+    # Create a PDF page aggregator object.
+    device = PDFPageAggregator(rsrcmgr, laparams=laparams)
+
+    # Create a PDF interpreter object.
+    interpreter = PDFPageInterpreter(rsrcmgr, device)
+
+    doc_result = []
+
+    # loop over all pages in the document
+    pages = [el for el in PDFPage.create_pages(doc)]
+
+    desired_page = pages[page_nbr]
+
+    interpreter.process_page(desired_page)
     layout = device.get_result()
 
     # extract text from this object
-    parse_obj(layout._objs)
+    doc_result.extend(parse_obj(layout._objs))
+
+    return doc_result
 
 
+def loadvalue_page_date(pdf_path: Path, page: int, date: str) -> str:
+    with open(pdf_path, "rb") as file:
+        # Create a PDF parser object associated with the file object.
+        parser = PDFParser(file)
 
+        # Create a PDF document object that stores the document structure.
+        # Password for initialization as 2nd parameter
+        document = PDFDocument(parser)
 
-
-
-
-
-
-
-
-
-exit(-1)
-
-
-
-
-
-
-from pathlib import Path
-
-from src.imageprocessing.utils import load_images_from_path, rewrite_img
-
-
-from pdfrw import PdfReader
-pdf_obj = PdfReader('data.pdf')
-
-test_page = pdf_obj.pages[0]
-print(pdf_obj.pages[0])
-exit(-1)
-
-
-
-img_list = load_images_from_path(Path("../../"))
-
-for img_el in img_list:
-    rewrite_img(img_el)
-    img_el.save("./example_mod.jpg")
+        result = parse_doc(document, page)
+        for el in result:
+            print(result)
