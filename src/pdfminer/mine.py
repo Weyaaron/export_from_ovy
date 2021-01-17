@@ -69,7 +69,7 @@ def extract_dates(koordinate_list: List[tuple]) -> List[tuple]:
     return [el for el in koordinate_list if re.fullmatch(regex, el[2])]
 
 
-def loadvalue_page_date(pdf_path: Path, page: int, date: str) -> str:
+def load_triples_from_page(pdf_path: Path, page: int) -> List[tuple]:
     with open(pdf_path, "rb") as file:
         # Create a PDF parser object associated with the file object.
         parser = PDFParser(file)
@@ -79,6 +79,8 @@ def loadvalue_page_date(pdf_path: Path, page: int, date: str) -> str:
         document = PDFDocument(parser)
 
         result = parse_doc(document, page)
+
+        return result
 
         s_values = [el for el in result if el[2] == "S"]
 

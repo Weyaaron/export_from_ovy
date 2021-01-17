@@ -29,7 +29,6 @@ ich helfe gerne.
 Extrahiert werden können momentan die Temperaturen, die Uhrzeiten sowie die Kalenderdaten
 der Messung.
 
-[1]https://play.google.com/store/apps/details?id=com.ovyapp.android&hl=en_US&gl=US,
-https://ovyapp.com/
+[1]https://play.google.com/store/apps/details?id=com.ovyapp.android&hl=en_US&gl=US
 
 [2]https://play.google.com/store/apps/details?id=com.drip&hl=en_US&gl=US

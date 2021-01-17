@@ -13,8 +13,8 @@ def load_images_from_path(path:Path)->List:
 
     #the partial loading is for speed while debugging
     for file_el in sorted(list(path.iterdir()))[0:2]:
-
-        result.append(Image.open(file_el))
+        if "jpg" in file_el.name:
+            result.append(Image.open(file_el))
 
     return result
 
@@ -24,7 +24,9 @@ def load_images_from_path(path:Path)->List:
 def split_image_into_clusters(image:Image)->List[PixelCluster]:
 
     result = []
-    coordinates = extract_coordinates(image, (255, 0, 127))
+    rgb_triple =  (255, 0, 127)
+
+    coordinates = extract_coordinates(image, rgb_triple)
 
     indexes = interpret_coordinates(coordinates)
     for i in range(0,len(indexes)-1):
@@ -36,7 +38,7 @@ def convert_to_image():
 
 
     # Store Pdf with convert_from_path function
-    images = convert_from_path('data.pdf')
+    images = convert_from_path('data/data.pdf')
 
     for i,img in enumerate(images):
         img.save("./data/output"+ str(i).zfill(2)+".jpg", 'JPEG')
