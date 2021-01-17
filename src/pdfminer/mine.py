@@ -15,40 +15,43 @@ from pathlib import Path
 
 from src.imageprocessing.utils import tuple_diff
 
-def color_gradient_from_xy(image, x_offset, y_offset)->int:
+
+def color_gradient_from_xy(image, x_offset, y_offset) -> int:
     result = 0
     height = 30
     width = 30
 
-    middle_tuple = image[x_offset + height/2, y_offset+ width/2 ]
-    for x in range(x_offset, x_offset+ height):
-        for y in range(y_offset, y_offset+width):
-            diff = tuple_diff(middle_tuple, image[x,y])
+    middle_tuple = image[x_offset + height / 2, y_offset + width / 2]
+    for x in range(x_offset, x_offset + height):
+        for y in range(y_offset, y_offset + width):
+            diff = tuple_diff(middle_tuple, image[x, y])
             result += diff
+            if (
+                x == x_offset
+                or y == x_offset
+                or x == x_offset + height - 1
+                or y == y_offset + width - 1
+            ):
+                image[x, y] = (100, 100, 100)
 
     return result
 
     pass
 
 
-
-def color_gradient(image_matrix:ndarray)->int:
+def color_gradient(image_matrix: ndarray) -> int:
     sum_result = 0
-    x_center = int(image_matrix.shape[0]/2)
-    y_center = int(image_matrix.shape[1]/2)
-    midle_tuple = image_matrix[x_center,y_center]
-
+    x_center = int(image_matrix.shape[0] / 2)
+    y_center = int(image_matrix.shape[1] / 2)
+    midle_tuple = image_matrix[x_center, y_center]
 
     for x in range(0, image_matrix.shape[0]):
         for y in range(0, image_matrix.shape[1]):
-            target_tuple = image_matrix[x,y]
+            target_tuple = image_matrix[x, y]
             result = tuple_diff(midle_tuple, target_tuple)
             sum_result += result
 
     return sum_result
-
-
-
 
 
 def parse_obj(lt_objs) -> List[tuple]:
@@ -61,7 +64,7 @@ def parse_obj(lt_objs) -> List[tuple]:
             text = obj.get_text().strip("\n").strip(" ")
             text = text.replace("\n", "")
 
-            text= text.replace("DATUM ","")
+            text = text.replace("DATUM ", "")
             result.append((obj.bbox[0], obj.bbox[1], text))
             # print("%6d, %6d, %s" % (obj.bbox[0], obj.bbox[1], text))
 
@@ -103,7 +106,7 @@ def parse_doc(doc: PDFDocument, page_nbr: int) -> List[tuple]:
 
 def extract_dates(koordinate_list: List[tuple]) -> List[tuple]:
 
-    regex = re.compile('[0-9]{2}\.[0-9]{2}\.')
+    regex = re.compile("[0-9]{2}\.[0-9]{2}\.")
 
     return [el for el in koordinate_list if re.fullmatch(regex, el[2])]
 
