@@ -8,11 +8,14 @@ from pdf2image import convert_from_path
 from src.imageprocessing.pixelcluster import PixelCluster
 
 
+
+
+
 def load_images_from_path(path:Path)->List:
     result = []
 
     #the partial loading is for speed while debugging
-    for file_el in sorted(list(path.iterdir()))[0:2]:
+    for file_el in sorted(list(path.iterdir())):
         if "jpg" in file_el.name:
             result.append(Image.open(file_el))
 
@@ -68,6 +71,47 @@ def interpret_coordinates(coordinates: List[Tuple]) -> List[int]:
             indexes.append(i)
     indexes.append(len(coordinates)-1)
     return indexes
+
+def tuple_diff(tuple_one, tuple_two)->int:
+    diff = 0
+    for i in range(0, 3):
+        diff = diff + abs(int(tuple_one[i]) - int(tuple_two[i]))
+    return diff
+
+
+def test_coordinates(img, x_value:int, rbg_tuple: tuple) -> List[Tuple]:
+    result = []
+    rbg_list = []
+    pix = img.load()
+
+    for y in range(1300, 1500):
+        for x_right_bound in range(x_value,x_value+50):
+           # print((x_right_bound,y))
+            diff = tuple_diff(pix[x_right_bound,y], rbg_tuple)
+            print(diff)
+            if pix[x_value+x_right_bound,y] == rbg_tuple:
+                print("!")
+
+    return
+
+    for x in range(200, img.size[0]):
+        for y in range(1300, 1500):
+
+            if pix[x, y] not in rbg_list:
+                rbg_list.append(pix[x, y])
+
+            actual_tuple = pix[x,y]
+            diff = 0
+            for i in range(0,3):
+                diff = diff + abs(actual_tuple[i]-rbg_tuple[i])
+            if diff < 20:
+                print((x,y))
+                result.append((x, y))
+
+
+    return result
+
+
 
 
 

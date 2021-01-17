@@ -1,6 +1,7 @@
 import re
 from typing import List
 
+from numpy import ndarray
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfpage import PDFPage
@@ -11,6 +12,43 @@ from pdfminer.converter import PDFPageAggregator
 import pdfminer
 
 from pathlib import Path
+
+from src.imageprocessing.utils import tuple_diff
+
+def color_gradient_from_xy(image, x_offset, y_offset)->int:
+    result = 0
+    height = 30
+    width = 30
+
+    middle_tuple = image[x_offset + height/2, y_offset+ width/2 ]
+    for x in range(x_offset, x_offset+ height):
+        for y in range(y_offset, y_offset+width):
+            diff = tuple_diff(middle_tuple, image[x,y])
+            result += diff
+
+    return result
+
+    pass
+
+
+
+def color_gradient(image_matrix:ndarray)->int:
+    sum_result = 0
+    x_center = int(image_matrix.shape[0]/2)
+    y_center = int(image_matrix.shape[1]/2)
+    midle_tuple = image_matrix[x_center,y_center]
+
+
+    for x in range(0, image_matrix.shape[0]):
+        for y in range(0, image_matrix.shape[1]):
+            target_tuple = image_matrix[x,y]
+            result = tuple_diff(midle_tuple, target_tuple)
+            sum_result += result
+
+    return sum_result
+
+
+
 
 
 def parse_obj(lt_objs) -> List[tuple]:
@@ -23,7 +61,8 @@ def parse_obj(lt_objs) -> List[tuple]:
             text = obj.get_text().strip("\n").strip(" ")
             text = text.replace("\n", "")
 
-            result.append((int(obj.bbox[0]), int(obj.bbox[1]), text))
+            text= text.replace("DATUM ","")
+            result.append((obj.bbox[0], obj.bbox[1], text))
             # print("%6d, %6d, %s" % (obj.bbox[0], obj.bbox[1], text))
 
             # if it's a container, recurse
@@ -81,19 +120,3 @@ def load_triples_from_page(pdf_path: Path, page: int) -> List[tuple]:
         result = parse_doc(document, page)
 
         return result
-
-        s_values = [el for el in result if el[2] == "S"]
-
-        for s_value_el in s_values:
-            for tuple_el in result:
-                if abs(s_value_el[0] - tuple_el[0]) < 5:
-                    pass
-                    # print(tuple_el)
-                    # print("!")
-
-        date_tuples = extract_dates(result)
-        for el in date_tuples:
-            print(el)
-        exit(-1)
-        for el in result:
-            print(el[2])
