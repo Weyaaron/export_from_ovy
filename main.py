@@ -1,19 +1,16 @@
-from datetime import datetime
-
 from py_pdf_parser.loaders import load_file
 
-from py_pdf_parser import tables
-
-from src.imageprocessing.utils import test_image, convert_to_image
 from src.zyklus import Zyklus
 
 
+
+from src.zyklus import Zyklus
 
 
 def load():
 
     raw_text = ""
-    document = load_file("./data.pdf")
+    document = load_file("./data/data.pdf")
     for el in document.elements:
         raw_text = raw_text + el.text()
 
@@ -29,5 +26,4 @@ def load():
 
 if __name__ == "__main__":
     #convert_to_image()
-    test_image()
-    #load()
+    load()
