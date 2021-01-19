@@ -20,8 +20,10 @@ def load():
     for i in range(0, len(entrys), 4):
         zyklen.append(Zyklus(entrys[i : i + 4]))
 
-    for zyklus_el in zyklen:
-        zyklus_el.print_csv()
+    for i,zyklus_el in enumerate(zyklen):
+        zyklus_el.get_mukus_values(i)
+        print(i)
+       # zyklus_el.print_csv()
 
 
 if __name__ == "__main__":

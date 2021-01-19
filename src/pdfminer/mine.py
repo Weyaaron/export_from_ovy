@@ -67,7 +67,7 @@ def parse_obj(lt_objs) -> List[tuple]:
             text = text.replace("\n", "")
 
             text = text.replace("DATUM ", "")
-            result.append((obj.bbox[0], obj.bbox[1], text))
+            result.append((int(obj.bbox[0]), int(obj.bbox[1]), text))
             # print("%6d, %6d, %s" % (obj.bbox[0], obj.bbox[1], text))
 
             # if it's a container, recurse

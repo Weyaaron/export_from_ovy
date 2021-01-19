@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from src.pdfminer.mine import load_triples_from_page, extract_dates
+
 
 class Zyklus:
     def __init__(self, raw_list: list) -> None:
@@ -15,7 +17,6 @@ class Zyklus:
         self.extract_temps()
         self.extract_dates()
         self.extract_times()
-        self.print_csv()
 
     def print_csv(self):
         lines = ""
@@ -73,3 +74,30 @@ class Zyklus:
         continuous_time = time_str.replace("\n", "")
         for i in range(0, len(continuous_time), 5):
             self.time_list.append(continuous_time[i : i + 5])
+
+
+    def get_mukus_values(self, page_nmbr: int )->None:
+
+        triples = load_triples_from_page('./data/data.pdf',page_nmbr)
+        date_triples  = extract_dates(triples)
+
+
+        allowed_values = ["S","t","S+"]
+        for tuple_a in date_triples:
+            for tuple_b in [el for el in triples if el not in date_triples]:
+                if 0 < abs(tuple_a[0]- tuple_b[0]) <5:
+                    if tuple_b[2] in allowed_values:
+                        print((tuple_a,tuple_b))
+
+        date_x_dict = {}
+        for date_el in self.date_list:
+            for tuple_el in triples:
+                comp_str = ".".join(date_el.split(".")[0:2]) +"."
+                if tuple_el[2]  == comp_str:
+                    date_x_dict.update({tuple_el[0]:tuple_el[2]})
+
+        for key_el in date_x_dict.keys():
+            for tuple_el in triples:
+                if  0 <abs(key_el == tuple_el[0]) <5:
+                    pass
+                   # print(tuple_el)
