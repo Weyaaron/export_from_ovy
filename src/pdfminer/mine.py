@@ -2,14 +2,16 @@ import re
 from typing import List
 
 from numpy import ndarray
-from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfpage import PDFPage
+from pdfminer.pdftypes import PDFNotImplementedError
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.layout import LAParams
 from pdfminer.converter import PDFPageAggregator
 import pdfminer
+
 
 from pathlib import Path
 
@@ -75,7 +77,7 @@ def parse_obj(lt_objs) -> List[tuple]:
     return result
 
 
-def parse_doc(doc: PDFDocument, page_nbr: int) -> List[tuple]:
+def parse_doc(doc, page_nbr: int) -> List[tuple]:
     # Create a PDF resource manager object that stores shared resources.
     rsrcmgr = PDFResourceManager()
 
@@ -92,6 +94,7 @@ def parse_doc(doc: PDFDocument, page_nbr: int) -> List[tuple]:
 
     # loop over all pages in the document
     pages = [el for el in PDFPage.create_pages(doc)]
+  
 
     desired_page = pages[page_nbr]
 

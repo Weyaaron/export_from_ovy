@@ -36,9 +36,10 @@ def split_image_into_clusters(image: Image) -> List[PixelCluster]:
 def convert_to_image():
 
     # Store Pdf with convert_from_path function
-    images = convert_from_path("data/data.pdf")
+    images = convert_from_path("data/data.pdf", jpegopt='quality', dpi=600)
 
     for i, img in enumerate(images):
+        print(str(i))
         img.save("./data/output" + str(i).zfill(2) + ".jpg", "JPEG")
 
 
