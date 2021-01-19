@@ -42,7 +42,7 @@ class Zyklus:
         critical_part = self.raw_list[3].split("D")[0]
         self.date_range = critical_part.split(": ")[1].split(" ")[0]
 
-        self.year = "." + str(self.date_range.split(".")[2])
+        self.year = int( str(self.date_range.split(".")[2]))
 
     def extract_temps(self):
         str_val = self.raw_list[3].split("Exportiert")[0]
@@ -56,18 +56,12 @@ class Zyklus:
 
     def extract_dates(self):
         date_str = self.raw_list[3].split("DATUM")[1]
-        date_str = date_str.split("UHR")[0]
-        continuous_date = date_str.replace(".\n", ",")
-        date_split = continuous_date.split(".")
-        for date_el in [el for el in date_split if len(el) > 2]:
-            date_el = date_el.strip()
-            final_val = date_el.replace(",", ".")
-            if len(final_val) == 5:
-                final_val = final_val + self.year
-                self.date_list.append(final_val)
-            else:
-                print(final_val)
-                raise ValueError
+        date_pieces = date_str.split("UHR")[0].split(".")
+        for i in range(0, len(date_pieces)-1,2):
+            current_piece = date_pieces[i]
+            next_piece = date_pieces[i+1]
+            new_value = ".".join([current_piece, next_piece, str(self.year)])
+            self.date_list.append(new_value)
 
     def extract_times(self):
         time_str = self.raw_list[3].split("UHRZEIT")[1].split("37,00")[0]
@@ -88,16 +82,3 @@ class Zyklus:
                 if 0 < abs(tuple_a[0]- tuple_b[0]) <5:
                     if tuple_b[2] in allowed_values:
                         print((tuple_a,tuple_b))
-
-        date_x_dict = {}
-        for date_el in self.date_list:
-            for tuple_el in triples:
-                comp_str = ".".join(date_el.split(".")[0:2]) +"."
-                if tuple_el[2]  == comp_str:
-                    date_x_dict.update({tuple_el[0]:tuple_el[2]})
-
-        for key_el in date_x_dict.keys():
-            for tuple_el in triples:
-                if  0 <abs(key_el == tuple_el[0]) <5:
-                    pass
-                   # print(tuple_el)

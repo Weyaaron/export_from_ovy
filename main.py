@@ -1,5 +1,6 @@
-from py_pdf_parser.loaders import load_file
+from pathlib import Path
 
+from src.pdfminer.mine import load_text
 from src.zyklus import Zyklus
 
 
@@ -10,11 +11,8 @@ from src.zyklus import Zyklus
 def load():
 
     raw_text = ""
-    document = load_file("./data/data.pdf")
-    for el in document.elements:
-        raw_text = raw_text + el.text()
+    entrys = load_text(Path("./data/data.pdf")).split("Zyklus")
 
-    entrys = raw_text.split("Zyklus")
     entrys = entrys[1 : len(entrys)]
     zyklen = []
     for i in range(0, len(entrys), 4):
