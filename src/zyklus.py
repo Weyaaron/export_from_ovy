@@ -3,29 +3,25 @@ from datetime import datetime
 from src.pdfminer.mine import load_triples_from_page, filter_dates, extract_shapes_from_page, filter_temps
 import pandas as pd
 
+from src.pdfminer.pdfpagecontainer import PdfPageContainer
 from src.utils import load_frame
 
 
 
 class Zyklus:
-    def __init__(self, raw_list: list) -> None:
+    def __init__(self, pdf_page: PdfPageContainer) -> None:
 
         self.dataframe = load_frame()
 
-
-
-        self.raw_list = raw_list
+        self.pdf_page = pdf_page
         self.length = 0
         self.date_range = ""
         self.year = 0
         self.date_list = []
         self.temp_list = []
         self.time_list = []
-        self.extract_length()
-        self.extract_date_range()
-        self.extract_dates()
-        self.extract_temps()
-        self.extract_times()
+
+
 
     def print_csv(self):
         lines = ""
@@ -45,16 +41,16 @@ class Zyklus:
         print(lines)
 
     def extract_length(self):
-        self.length = int(self.raw_list[2].split(": ")[1])
+        self.length = int(self.pdf_page[2].split(": ")[1])
 
     def extract_date_range(self):
-        critical_part = self.raw_list[3].split("D")[0]
+        critical_part = self.pdf_page[3].split("D")[0]
         self.date_range = critical_part.split(": ")[1].split(" ")[0]
 
         self.year = int( str(self.date_range.split(".")[2]))
 
     def extract_temps(self):
-        str_val = self.raw_list[3].split("Exportiert")[0]
+        str_val = self.pdf_page[3].split("Exportiert")[0]
         temps = str_val.split("BT")[1].split("PERIO")[0]
 
         counties_temps = temps.replace("\n", "")
@@ -85,7 +81,7 @@ class Zyklus:
 
 
     def extract_dates(self):
-        date_str = self.raw_list[3].split("DATUM")[1]
+        date_str = self.pdf_page[3].split("DATUM")[1]
         date_pieces = date_str.split("UHR")[0].split(".")
         for i in range(0, len(date_pieces)-1,2):
             current_piece = date_pieces[i]
@@ -102,7 +98,7 @@ class Zyklus:
             final_str = date_result.strftime("%Y-%m-%d")
 
     def extract_times(self):
-        time_str = self.raw_list[3].split("UHRZEIT")[1].split("37,00")[0]
+        time_str = self.pdf_page[3].split("UHRZEIT")[1].split("37,00")[0]
         continuous_time = time_str.replace("\n", "")
         for i in range(0, len(continuous_time), 5):
             self.time_list.append(continuous_time[i : i + 5])

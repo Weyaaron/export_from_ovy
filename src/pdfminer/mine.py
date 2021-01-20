@@ -6,6 +6,7 @@ import minecart
 
 from pathlib import Path
 
+from src.pdfminer.pdfpagecontainer import PdfPageContainer
 
 
 def filter_dates(koordinate_list: List[tuple]) -> List[tuple]:
@@ -47,25 +48,24 @@ def filter_temps(triples)->List:
 
 
 
-def load_pdf(pdf_path:Path)->List:
-    str_result = ""
+def load_pdf(pdf_path:Path)->List[PdfPageContainer]:
+
+    target_color = (1, 0, 0.498039)
     list_result = []
     with open(pdf_path, "rb") as file:
+
         doc = minecart.Document(file)
-        for i in range(0, 24):
-            page = doc.get_page(i)
-            page_list = []
-            list_result.append(page_list)
-            for letter_el in page.letterings:
 
-
-                text = str(letter_el).strip("\n").strip(" ")
-                text = text.replace("\n", "")
-                text = text.replace("DATUM ", "")
-
+        for page_el  in doc.iter_pages():
+            new_container = PdfPageContainer()
+            for letter_el in page_el.letterings:
                 bbox = letter_el.get_bbox()
-                page_list.append((int(bbox[0]), int(bbox[1]), str(text)))
+                new_container.triples.append((int(bbox[0]), int(bbox[1]), str(letter_el)))
 
+            filled_shapes = [el for el in page_el.shapes if el.fill is not None]
+            new_container.shapes = [el for el in filled_shapes if el.fill.color.as_rgb() == target_color]
+
+            list_result.append(new_container)
     return  list_result
 
 
