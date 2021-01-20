@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.pdfminer.mine import load_text
+from src.pdfminer.mine import load_pdf
 
 
 
@@ -9,20 +9,17 @@ from src.zyklus import Zyklus
 
 def load():
 
-    raw_text = ""
-    entrys = load_text(Path("./data/data.pdf")).split("Zyklus")
+    list_triple_lists = load_pdf(Path("./data/data.pdf"))
 
-    entrys = entrys[1 : len(entrys)]
-    #for speed purposes
-   # entrys = entrys[0:4]
     zyklen = []
-    for i in range(0, len(entrys), 4):
-        zyklen.append(Zyklus(entrys[i : i + 4]))
+    for i in range(len(list_triple_lists)):
+        zyklen.append(Zyklus(list_triple_lists[i]))
 
     for i,zyklus_el in enumerate(zyklen):
-        zyklus_el.extract_bleeding_values(i)
-        zyklus_el.extract_mukus_values(i)
+       # zyklus_el.extract_bleeding_values(i)
+     #   zyklus_el.extract_mukus_values(i)
         print(i)
+        print(zyklus_el.dataframe.to_csv())
        # zyklus_el.print_csv()
 
 

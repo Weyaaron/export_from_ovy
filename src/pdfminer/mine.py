@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Tuple
 
 import minecart
 
@@ -22,16 +22,51 @@ def filter_dates(koordinate_list: List[tuple]) -> List[tuple]:
     return result
 
 
-def load_text(pdf_path:Path)->str:
-    result = ""
+def filter_temps(triples)->List:
+
+
+    past_index = False
+    temp_list = []
+
+    for tuple_el in triples:
+        if tuple_el[2] =='PERIODE':
+            past_index =False
+        if past_index:
+            temp_list.append(tuple_el)
+        if tuple_el[2] == 'BT':
+            past_index = True
+
+    result = []
+    for i in range(0, len(temp_list) - 1, 2):
+        final_temp = temp_list[i][2] + temp_list[i + 1][2]
+        result.append((temp_list[i][0], temp_list[i][1], final_temp))
+
+    return result
+
+
+
+
+
+def load_pdf(pdf_path:Path)->List:
+    str_result = ""
+    list_result = []
     with open(pdf_path, "rb") as file:
         doc = minecart.Document(file)
         for i in range(0, 24):
             page = doc.get_page(i)
-
+            page_list = []
+            list_result.append(page_list)
             for letter_el in page.letterings:
-                result +=  str(letter_el)
-    return result
+
+
+                text = str(letter_el).strip("\n").strip(" ")
+                text = text.replace("\n", "")
+                text = text.replace("DATUM ", "")
+
+                bbox = letter_el.get_bbox()
+                page_list.append((int(bbox[0]), int(bbox[1]), str(text)))
+
+    return  list_result
 
 
 

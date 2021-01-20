@@ -1,10 +1,19 @@
 from datetime import datetime
 
-from src.pdfminer.mine import load_triples_from_page, filter_dates, extract_shapes_from_page
+from src.pdfminer.mine import load_triples_from_page, filter_dates, extract_shapes_from_page, filter_temps
+import pandas as pd
+
+from src.utils import load_frame
+
 
 
 class Zyklus:
     def __init__(self, raw_list: list) -> None:
+
+        self.dataframe = load_frame()
+
+
+
         self.raw_list = raw_list
         self.length = 0
         self.date_range = ""
@@ -14,8 +23,8 @@ class Zyklus:
         self.time_list = []
         self.extract_length()
         self.extract_date_range()
-        self.extract_temps()
         self.extract_dates()
+        self.extract_temps()
         self.extract_times()
 
     def print_csv(self):
@@ -54,6 +63,27 @@ class Zyklus:
             single_temp = single_temp.replace(",", ".")
             self.temp_list.append(single_temp)
 
+        triples = load_triples_from_page('./data/data.pdf', self.page)
+        temp_triples = filter_temps(triples)
+
+        result = []
+        for shape_el in shapes:
+            x_koordinate = shape_el.path[0][1]
+            min_distance = 10
+            date_found = None
+            for tuple_el in date_triples:
+                distance = int(abs(tuple_el[0] - x_koordinate))
+                if distance < min_distance:
+                    min_distance = distance
+                    date_found = tuple_el
+            result.append((shape_el, date_found))
+
+        for i in range(0, len(self.dataframe.index)):
+         #   self.dataframe = self.dataframe.at[i, 'temperature.value'] = "Hallo"
+           self.dataframe.loc[self.dataframe.index == i, 'temperature.value'] = self.temp_list[i]
+           self.dataframe.loc[self.dataframe.index == i, 'temperature.exclude'] = "None"
+
+
     def extract_dates(self):
         date_str = self.raw_list[3].split("DATUM")[1]
         date_pieces = date_str.split("UHR")[0].split(".")
@@ -63,11 +93,23 @@ class Zyklus:
             new_value = ".".join([current_piece, next_piece, str(self.year)])
             self.date_list.append(new_value)
 
+        for date_el in self.date_list:
+            date_result = datetime.strptime(date_el, "%d.%m.%Y")
+            new_series = pd.Series({"date":date_result})
+            self.dataframe = self.dataframe.append(new_series, ignore_index=True)
+
+
+            final_str = date_result.strftime("%Y-%m-%d")
+
     def extract_times(self):
         time_str = self.raw_list[3].split("UHRZEIT")[1].split("37,00")[0]
         continuous_time = time_str.replace("\n", "")
         for i in range(0, len(continuous_time), 5):
             self.time_list.append(continuous_time[i : i + 5])
+
+        for i in range(0, len(self.dataframe.index)):
+            #   self.dataframe = self.dataframe.at[i, 'temperature.value'] = "Hallo"
+            self.dataframe.loc[self.dataframe.index == i, 'temperature.time'] = self.time_list[i]
 
 
     def extract_bleeding_values(self, page_nmbr:int)->None:
