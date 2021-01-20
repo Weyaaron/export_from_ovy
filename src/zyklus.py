@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.pdfminer.mine import load_triples_from_page, filter_dates
+from src.pdfminer.mine import load_triples_from_page, filter_dates, extract_shapes_from_page
 
 
 class Zyklus:
@@ -70,7 +70,12 @@ class Zyklus:
             self.time_list.append(continuous_time[i : i + 5])
 
 
-    def get_mukus_values(self, page_nmbr: int )->None:
+    def extract_bleeding_values(self, page_nmbr:int)->None:
+        shapes = extract_shapes_from_page('./data/data.pdf',page_nmbr)
+
+
+
+    def extract_mukus_values(self, page_nmbr: int)->None:
 
         triples = load_triples_from_page('./data/data.pdf',page_nmbr)
         date_triples  = filter_dates(triples)

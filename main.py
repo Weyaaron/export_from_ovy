@@ -19,7 +19,8 @@ def load():
         zyklen.append(Zyklus(entrys[i : i + 4]))
 
     for i,zyklus_el in enumerate(zyklen):
-        zyklus_el.get_mukus_values(i)
+        zyklus_el.extract_mukus_values(i)
+        zyklus_el.extract_bleeding_values(i)
         print(i)
        # zyklus_el.print_csv()
 

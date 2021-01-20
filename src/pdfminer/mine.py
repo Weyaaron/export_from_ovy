@@ -98,3 +98,21 @@ def load_triples_from_page(pdf_path:Path, page_nmbr:int)->List[tuple]:
 
 
 
+def extract_shapes_from_page(pdf_path:Path, page_nmbr:int)->List:
+    target_color = (1, 0, 0.498039)
+    with  open(pdf_path, 'rb') as file:
+        doc = minecart.Document(file)
+        page = doc.get_page(page_nmbr)
+
+        filled_shapes = [el for el in page.shapes if el.fill is not None]
+        stroked_shapes = [el for el in page.shapes if el.stroke is not None]
+
+        filled_shapes = [el for el in filled_shapes if el.fill.color.as_rgb() == target_color]
+        stroked_shapes = [el for el in stroked_shapes if el.stroke.color.as_rgb() == target_color]
+
+    return filled_shapes
+
+
+
+
+
