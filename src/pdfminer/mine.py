@@ -52,9 +52,16 @@ def color_gradient(image_matrix: ndarray) -> int:
 
 def extract_dates(koordinate_list: List[tuple]) -> List[tuple]:
 
-    regex = re.compile("[0-9]{2}\.[0-9]{2}\.")
+    date_reg = re.compile("[0-9]{2}\.")
+    date_list = [el for el in koordinate_list if re.fullmatch(date_reg, el[2])]
 
-    return [el for el in koordinate_list if re.fullmatch(regex, el[2])]
+    result = []
+
+    for i in range(0, len(date_list) - 1,2):
+        final_date = date_list[i][2] + date_list[i+1][2]
+        result.append((date_list[i][0], date_list[i][1],final_date))
+
+    return result
 
 
 def load_text(pdf_path:Path)->str:
@@ -67,8 +74,6 @@ def load_text(pdf_path:Path)->str:
             for letter_el in page.letterings:
                 result +=  str(letter_el)
     return result
-
-
 
 
 
@@ -87,13 +92,6 @@ def load_triples_from_page(pdf_path:Path, page_nmbr:int)->List[tuple]:
             bbox = letter_el.get_bbox()
             result.append((int(bbox[0]), int(bbox[1]), str(text)))
 
-
-    for i in range(0, len(result)-1):
-        if result[i][0] == result[i+1][0]:
-            print((result[i], result[i+1]))
-
-
-    exit(-1)
     return result
 
 
