@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.pdfminer.mine import load_triples_from_page, extract_dates
+from src.pdfminer.mine import load_triples_from_page, filter_dates
 
 
 class Zyklus:
@@ -73,12 +73,24 @@ class Zyklus:
     def get_mukus_values(self, page_nmbr: int )->None:
 
         triples = load_triples_from_page('./data/data.pdf',page_nmbr)
-        date_triples  = extract_dates(triples)
+        date_triples  = filter_dates(triples)
 
+        tuples_found = []
 
         allowed_values = ["S","t","S+"]
+        str_values_present = [el for el in triples if el[2] in allowed_values ]
+
         for tuple_a in date_triples:
-            for tuple_b in [el for el in triples if el not in date_triples]:
-                if 0 < abs(tuple_a[0]- tuple_b[0]) <5:
-                    if tuple_b[2] in allowed_values:
-                        print((tuple_a,tuple_b))
+            min_distance = 10
+            matching_tuple = None
+
+            for tuple_b in str_values_present:
+                distance =  abs(tuple_a[0]- tuple_b[0])
+                if distance < min_distance:
+                    min_distance = distance
+                    matching_tuple = tuple_b
+            if matching_tuple:
+                tuples_found.append((tuple_a,matching_tuple, min_distance))
+
+        if len(str_values_present) != len(tuples_found):
+            raise ValueError

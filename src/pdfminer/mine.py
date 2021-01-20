@@ -50,7 +50,7 @@ def color_gradient(image_matrix: ndarray) -> int:
 
 
 
-def extract_dates(koordinate_list: List[tuple]) -> List[tuple]:
+def filter_dates(koordinate_list: List[tuple]) -> List[tuple]:
 
     date_reg = re.compile("[0-9]{2}\.")
     date_list = [el for el in koordinate_list if re.fullmatch(date_reg, el[2])]
