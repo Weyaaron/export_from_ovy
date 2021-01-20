@@ -72,7 +72,20 @@ class Zyklus:
 
     def extract_bleeding_values(self, page_nmbr:int)->None:
         shapes = extract_shapes_from_page('./data/data.pdf',page_nmbr)
+        triples = load_triples_from_page('./data/data.pdf', page_nmbr)
+        date_triples = filter_dates(triples)
 
+        result = []
+        for shape_el in shapes:
+            x_koordinate = shape_el.path[0][1]
+            min_distance = 10
+            date_found = None
+            for tuple_el in date_triples:
+                distance = int(abs(tuple_el[0]-x_koordinate))
+                if distance<min_distance:
+                    min_distance = distance
+                    date_found = tuple_el
+            result.append((shape_el, date_found))
 
 
     def extract_mukus_values(self, page_nmbr: int)->None:
