@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.pdfminer.mine import load_triples_from_page, filter_dates, extract_shapes_from_page, filter_temps, filter_times
+from src.pdfminer.mine import filter_dates, filter_temps, filter_times
 import pandas as pd
 
 from src.pdfminer.pdfpagecontainer import PdfPageContainer
@@ -19,8 +19,6 @@ class Zyklus:
         self.date_list = []
         self.temp_list = []
         self.time_list = []
-
-
 
     def print_csv(self):
         print(self.dataframe.to_csv())
@@ -48,7 +46,7 @@ class Zyklus:
         critical_part = self.pdf_page[3].split("D")[0]
         self.date_range = critical_part.split(": ")[1].split(" ")[0]
 
-        self.year = int( str(self.date_range.split(".")[2]))
+        self.year = int(str(self.date_range.split(".")[2]))
 
     def extract_temps(self):
 
@@ -70,9 +68,10 @@ class Zyklus:
 
         self.dataframe["temperature.value"] = self.dataframe["date"].map(map_temp)
         self.dataframe["temperature.exclude"] = self.dataframe["date"].map(map_false)
-        self.dataframe.drop(index=self.dataframe[self.dataframe['temperature.value']=='None' ].index, inplace=True)
-
-
+        self.dataframe.drop(
+            index=self.dataframe[self.dataframe["temperature.value"] == "None"].index,
+            inplace=True,
+        )
 
     def extract_dates(self):
         date_triples = filter_dates(self.pdf_page.triples)
@@ -81,7 +80,7 @@ class Zyklus:
         for triple_el in date_triples:
             date_str = triple_el[2] + year
             date_result = datetime.strptime(date_str, "%d.%m.%Y")
-            new_series = pd.Series({'date':date_result})
+            new_series = pd.Series({"date": date_result})
             self.dataframe = self.dataframe.append(new_series, ignore_index=True)
         final_str = date_result.strftime("%Y-%m-%d")
 
@@ -89,11 +88,11 @@ class Zyklus:
         time_tuples = filter_times(self.pdf_page.triples)
         date_tuples = filter_dates(self.pdf_page.triples)
 
-        bound_data = bind_dates_with_data(date_tuples,time_tuples)
+        bound_data = bind_dates_with_data(date_tuples, time_tuples)
 
         def map_dict(key_el):
 
-            match_str = key_el.strftime("%d.%m")+"."
+            match_str = key_el.strftime("%d.%m") + "."
             try:
                 return bound_data[match_str]
             except KeyError:
@@ -101,10 +100,9 @@ class Zyklus:
 
         self.dataframe["temperature.time"] = self.dataframe["date"].map(map_dict)
 
-
-    def extract_bleeding_values(self)->None:
+    def extract_bleeding_values(self) -> None:
         shapes = self.pdf_page.shapes
-        triples =self.pdf_page.triples
+        triples = self.pdf_page.triples
         date_triples = filter_dates(triples)
 
         result = {}
@@ -113,18 +111,18 @@ class Zyklus:
             min_distance = 10
             date_found = None
             for tuple_el in date_triples:
-                distance = int(abs(tuple_el[0]-x_koordinate))
-                if distance<min_distance:
+                distance = int(abs(tuple_el[0] - x_koordinate))
+                if distance < min_distance:
                     min_distance = distance
                     date_found = tuple_el
-            result.update({date_found[2]:shape_el})
+            result.update({date_found[2]: shape_el})
 
         def map_bleeding(date_arg):
-            length_type = {13:2,7:3, 14:1}
+            length_type = {13: 2, 7: 3, 14: 1}
 
             match_str = date_arg.strftime("%d.%m") + "."
             try:
-                shape= result[match_str]
+                shape = result[match_str]
             except KeyError:
                 return 0
             return length_type[len(shape.path)]
@@ -136,12 +134,14 @@ class Zyklus:
 
         self.dataframe["bleeding.exclude"] = self.dataframe["date"].map(map_false)
 
-    def extract_mukus_values(self,):
+    def extract_mukus_values(
+        self,
+    ):
         triples = self.pdf_page.triples
-        date_triples  = filter_dates(triples)
+        date_triples = filter_dates(triples)
 
-        allowed_values = ["S","t","S+"]
-        str_values_present = [el for el in triples if el[2] in allowed_values ]
+        allowed_values = ["S", "t", "S+"]
+        str_values_present = [el for el in triples if el[2] in allowed_values]
 
         bound_values = bind_dates_with_data(date_triples, str_values_present)
 

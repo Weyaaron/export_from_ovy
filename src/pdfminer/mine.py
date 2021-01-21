@@ -16,24 +16,24 @@ def filter_dates(koordinate_list: List[tuple]) -> List[tuple]:
 
     result = []
 
-    for i in range(0, len(date_list) - 1,2):
-        final_date = date_list[i][2] + date_list[i+1][2]
-        result.append((date_list[i][0], date_list[i][1],final_date))
+    for i in range(0, len(date_list) - 1, 2):
+        final_date = date_list[i][2] + date_list[i + 1][2]
+        result.append((date_list[i][0], date_list[i][1], final_date))
 
     return result
 
 
-def filter_times(triples)->List:
+def filter_times(triples) -> List:
     past_index = False
     temp_list = []
 
     for tuple_el in triples:
-        #rather hacky, might break
+        # rather hacky, might break
         if "," in tuple_el[2]:
             past_index = False
         if past_index:
             temp_list.append(tuple_el)
-        if tuple_el[2] == 'UHRZEIT':
+        if tuple_el[2] == "UHRZEIT":
             past_index = True
 
     result = []
@@ -44,33 +44,29 @@ def filter_times(triples)->List:
     return result
 
 
-
-def filter_temps(triples)->List:
+def filter_temps(triples) -> List:
 
     past_index = False
     temp_list = []
 
     for tuple_el in triples:
-        if tuple_el[2] =='PERIODE':
-            past_index =False
+        if tuple_el[2] == "PERIODE":
+            past_index = False
         if past_index:
             temp_list.append(tuple_el)
-        if tuple_el[2] == 'BT':
+        if tuple_el[2] == "BT":
             past_index = True
 
     result = []
     for i in range(0, len(temp_list) - 1, 2):
         final_temp = temp_list[i][2] + temp_list[i + 1][2]
-        final_temp = final_temp.replace(",",".")
-        result.append((temp_list[i][0], temp_list[i][1], final_temp.strip("\"")))
+        final_temp = final_temp.replace(",", ".")
+        result.append((temp_list[i][0], temp_list[i][1], final_temp.strip('"')))
 
     return result
 
 
-
-
-
-def load_pdf(pdf_path:Path)->List[PdfPageContainer]:
+def load_pdf(pdf_path: Path) -> List[PdfPageContainer]:
 
     target_color = (1, 0, 0.498039)
     list_result = []
@@ -78,51 +74,18 @@ def load_pdf(pdf_path:Path)->List[PdfPageContainer]:
 
         doc = minecart.Document(file)
 
-        for page_el  in doc.iter_pages():
+        for page_el in doc.iter_pages():
             new_container = PdfPageContainer()
             for letter_el in page_el.letterings:
                 bbox = letter_el.get_bbox()
-                new_container.triples.append((int(bbox[0]), int(bbox[1]), str(letter_el)))
+                new_container.triples.append(
+                    (int(bbox[0]), int(bbox[1]), str(letter_el))
+                )
 
             filled_shapes = [el for el in page_el.shapes if el.fill is not None]
-            new_container.shapes = [el for el in filled_shapes if el.fill.color.as_rgb() == target_color]
+            new_container.shapes = [
+                el for el in filled_shapes if el.fill.color.as_rgb() == target_color
+            ]
 
             list_result.append(new_container)
-    return  list_result
-
-
-
-def load_triples_from_page(pdf_path:Path, page_nmbr:int)->List[tuple]:
-    result = []
-    with open(pdf_path, "rb") as file:
-
-        doc = minecart.Document(file)
-        page = doc.get_page(page_nmbr)
-
-        for letter_el in page.letterings:
-            text = str(letter_el).strip("\n").strip(" ")
-            text = text.replace("\n", "")
-            text = text.replace("DATUM ", "")
-
-            bbox = letter_el.get_bbox()
-            result.append((int(bbox[0]), int(bbox[1]), str(text)))
-
-    return result
-
-
-
-
-
-def extract_shapes_from_page(pdf_path:Path, page_nmbr:int)->List:
-    target_color = (1, 0, 0.498039)
-    with  open(pdf_path, 'rb') as file:
-        doc = minecart.Document(file)
-        page = doc.get_page(page_nmbr)
-
-        filled_shapes = [el for el in page.shapes if el.fill is not None]
-        stroked_shapes = [el for el in page.shapes if el.stroke is not None]
-
-        filled_shapes = [el for el in filled_shapes if el.fill.color.as_rgb() == target_color]
-        stroked_shapes = [el for el in stroked_shapes if el.stroke.color.as_rgb() == target_color]
-
-    return filled_shapes
+    return list_result
