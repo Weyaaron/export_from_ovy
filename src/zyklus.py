@@ -1,11 +1,10 @@
 from datetime import datetime
 
-from src.pdfminer.mine import load_triples_from_page, filter_dates, extract_shapes_from_page, filter_temps
+from src.pdfminer.mine import load_triples_from_page, filter_dates, extract_shapes_from_page, filter_temps, filter_times
 import pandas as pd
 
 from src.pdfminer.pdfpagecontainer import PdfPageContainer
-from src.utils import load_frame
-
+from src.utils import load_frame, bind_dates_with_data
 
 
 class Zyklus:
@@ -24,6 +23,8 @@ class Zyklus:
 
 
     def print_csv(self):
+        print(self.dataframe.to_csv())
+
         lines = ""
 
         for i, date_el in enumerate(self.date_list):
@@ -50,70 +51,63 @@ class Zyklus:
         self.year = int( str(self.date_range.split(".")[2]))
 
     def extract_temps(self):
-        str_val = self.pdf_page[3].split("Exportiert")[0]
-        temps = str_val.split("BT")[1].split("PERIO")[0]
 
-        counties_temps = temps.replace("\n", "")
-        for i in range(0, len(counties_temps), 5):
-            single_temp = counties_temps[i : i + 5]
-            single_temp = single_temp.replace(",", ".")
-            self.temp_list.append(single_temp)
+        date_triples = filter_dates(self.pdf_page.triples)
+        temp_triples = filter_temps(self.pdf_page.triples)
 
-        triples = load_triples_from_page('./data/data.pdf', self.page)
-        temp_triples = filter_temps(triples)
+        bound_temps = bind_dates_with_data(date_triples, temp_triples)
 
-        result = []
-        for shape_el in shapes:
-            x_koordinate = shape_el.path[0][1]
-            min_distance = 10
-            date_found = None
-            for tuple_el in date_triples:
-                distance = int(abs(tuple_el[0] - x_koordinate))
-                if distance < min_distance:
-                    min_distance = distance
-                    date_found = tuple_el
-            result.append((shape_el, date_found))
+        def map_temp(key_el):
 
-        for i in range(0, len(self.dataframe.index)):
-         #   self.dataframe = self.dataframe.at[i, 'temperature.value'] = "Hallo"
-           self.dataframe.loc[self.dataframe.index == i, 'temperature.value'] = self.temp_list[i]
-           self.dataframe.loc[self.dataframe.index == i, 'temperature.exclude'] = "None"
+            match_str = key_el.strftime("%d.%m") + "."
+            try:
+                return bound_temps[match_str]
+            except KeyError:
+                return "None"
+
+        def map_false(arg):
+            return False
+
+        self.dataframe["temperature.value"] = self.dataframe["date"].map(map_temp)
+        self.dataframe["temperature.exclude"] = self.dataframe["date"].map(map_false)
+        self.dataframe.drop(index=self.dataframe[self.dataframe['temperature.value']=='None' ].index, inplace=True)
+
 
 
     def extract_dates(self):
-        date_str = self.pdf_page[3].split("DATUM")[1]
-        date_pieces = date_str.split("UHR")[0].split(".")
-        for i in range(0, len(date_pieces)-1,2):
-            current_piece = date_pieces[i]
-            next_piece = date_pieces[i+1]
-            new_value = ".".join([current_piece, next_piece, str(self.year)])
-            self.date_list.append(new_value)
+        date_triples = filter_dates(self.pdf_page.triples)
 
-        for date_el in self.date_list:
-            date_result = datetime.strptime(date_el, "%d.%m.%Y")
-            new_series = pd.Series({"date":date_result})
+        year = self.pdf_page.triples[3][2].split(".")[4]
+        for triple_el in date_triples:
+            date_str = triple_el[2] + year
+            date_result = datetime.strptime(date_str, "%d.%m.%Y")
+            new_series = pd.Series({'date':date_result})
             self.dataframe = self.dataframe.append(new_series, ignore_index=True)
-
-
-            final_str = date_result.strftime("%Y-%m-%d")
+        final_str = date_result.strftime("%Y-%m-%d")
 
     def extract_times(self):
-        time_str = self.pdf_page[3].split("UHRZEIT")[1].split("37,00")[0]
-        continuous_time = time_str.replace("\n", "")
-        for i in range(0, len(continuous_time), 5):
-            self.time_list.append(continuous_time[i : i + 5])
+        time_tuples = filter_times(self.pdf_page.triples)
+        date_tuples = filter_dates(self.pdf_page.triples)
 
-        for i in range(0, len(self.dataframe.index)):
-            #   self.dataframe = self.dataframe.at[i, 'temperature.value'] = "Hallo"
-            self.dataframe.loc[self.dataframe.index == i, 'temperature.time'] = self.time_list[i]
+        bound_data = bind_dates_with_data(date_tuples,time_tuples)
+
+        def map_dict(key_el):
+
+            match_str = key_el.strftime("%d.%m")+"."
+            try:
+                return bound_data[match_str]
+            except KeyError:
+                return None
+
+        self.dataframe["temperature.time"] = self.dataframe["date"].map(map_dict)
 
 
-    def extract_bleeding_values(self, page_nmbr:int)->None:
-        shapes = extract_shapes_from_page('./data/data.pdf',page_nmbr)
-        triples = load_triples_from_page('./data/data.pdf', page_nmbr)
+    def extract_bleeding_values(self)->None:
+        shapes = self.pdf_page.shapes
+        triples =self.pdf_page.triples
         date_triples = filter_dates(triples)
 
-        result = []
+        result = {}
         for shape_el in shapes:
             x_koordinate = shape_el.path[0][1]
             min_distance = 10
@@ -123,8 +117,25 @@ class Zyklus:
                 if distance<min_distance:
                     min_distance = distance
                     date_found = tuple_el
-            result.append((shape_el, date_found))
+            result.update({date_found[2]:shape_el})
 
+        def map_bleeding(date_arg):
+            length_type = {13:2,7:3, 14:1}
+
+
+            match_str = date_arg.strftime("%d.%m") + "."
+            try:
+                shape= result[match_str]
+            except KeyError:
+                return 0
+            return length_type[len(shape.path)]
+
+        self.dataframe["bleeding.value"] = self.dataframe["date"].map(map_bleeding)
+
+        def map_false(arg):
+            return False
+
+        self.dataframe["bleeding.exclude"] = self.dataframe["date"].map(map_false)
 
     def extract_mukus_values(self, page_nmbr: int)->None:
 
@@ -136,17 +147,7 @@ class Zyklus:
         allowed_values = ["S","t","S+"]
         str_values_present = [el for el in triples if el[2] in allowed_values ]
 
-        for tuple_a in date_triples:
-            min_distance = 10
-            matching_tuple = None
-
-            for tuple_b in str_values_present:
-                distance =  abs(tuple_a[0]- tuple_b[0])
-                if distance < min_distance:
-                    min_distance = distance
-                    matching_tuple = tuple_b
-            if matching_tuple:
-                tuples_found.append((tuple_a,matching_tuple, min_distance))
+        bound_values = bind_dates_with_data(date_triples, str_values_present)
 
         if len(str_values_present) != len(tuples_found):
             raise ValueError

@@ -23,8 +23,29 @@ def filter_dates(koordinate_list: List[tuple]) -> List[tuple]:
     return result
 
 
-def filter_temps(triples)->List:
+def filter_times(triples)->List:
+    past_index = False
+    temp_list = []
 
+    for tuple_el in triples:
+        #rather hacky, might break
+        if "," in tuple_el[2]:
+            past_index = False
+        if past_index:
+            temp_list.append(tuple_el)
+        if tuple_el[2] == 'UHRZEIT':
+            past_index = True
+
+    result = []
+    for i in range(0, len(temp_list) - 1, 2):
+        final_temp = temp_list[i][2] + temp_list[i + 1][2]
+        result.append((temp_list[i][0], temp_list[i][1], final_temp))
+
+    return result
+
+
+
+def filter_temps(triples)->List:
 
     past_index = False
     temp_list = []
@@ -40,7 +61,8 @@ def filter_temps(triples)->List:
     result = []
     for i in range(0, len(temp_list) - 1, 2):
         final_temp = temp_list[i][2] + temp_list[i + 1][2]
-        result.append((temp_list[i][0], temp_list[i][1], final_temp))
+        final_temp = final_temp.replace(",",".")
+        result.append((temp_list[i][0], temp_list[i][1], final_temp.strip("\"")))
 
     return result
 
