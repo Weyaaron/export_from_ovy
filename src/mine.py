@@ -1,12 +1,12 @@
 import re
-from typing import List, Tuple
+from typing import List
 
 import minecart
 
 
 from pathlib import Path
 
-from src.pdfminer.pdfpagecontainer import PdfPageContainer
+from src.classes.pdfpagecontainer import PdfPageContainer
 
 
 def filter_dates(koordinate_list: List[tuple]) -> List[tuple]:

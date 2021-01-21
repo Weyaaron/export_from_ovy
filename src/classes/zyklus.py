@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from src.pdfminer.mine import filter_dates, filter_temps, filter_times
+from src.mine import filter_dates, filter_temps, filter_times
 import pandas as pd
 
-from src.pdfminer.pdfpagecontainer import PdfPageContainer
+from src.classes.pdfpagecontainer import PdfPageContainer
 from src.utils import load_frame, bind_dates_with_data
 
 
@@ -11,42 +11,10 @@ class Zyklus:
     def __init__(self, pdf_page: PdfPageContainer) -> None:
 
         self.dataframe = load_frame()
-
         self.pdf_page = pdf_page
         self.length = 0
-        self.date_range = ""
         self.year = 0
-        self.date_list = []
-        self.temp_list = []
-        self.time_list = []
 
-    def print_csv(self):
-        print(self.dataframe.to_csv())
-
-        lines = ""
-
-        for i, date_el in enumerate(self.date_list):
-            new_line = ""
-            date_result = datetime.strptime(date_el, "%d.%m.%Y")
-            final_str = date_result.strftime("%Y-%m-%d")
-            new_line = new_line + final_str + ","
-            try:
-                new_line = new_line + self.temp_list[i] + ",false,"
-                new_line = new_line + self.time_list[i]
-            except IndexError:
-                new_line = new_line + "NONE,false,"
-                new_line = new_line + "NONE"
-            lines = lines + new_line + "\n"
-        print(lines)
-
-    def extract_length(self):
-        self.length = int(self.pdf_page[2].split(": ")[1])
-
-    def extract_date_range(self):
-        critical_part = self.pdf_page[3].split("D")[0]
-        self.date_range = critical_part.split(": ")[1].split(" ")[0]
-
-        self.year = int(str(self.date_range.split(".")[2]))
 
     def extract_temps(self):
 
@@ -82,7 +50,7 @@ class Zyklus:
             date_result = datetime.strptime(date_str, "%d.%m.%Y")
             new_series = pd.Series({"date": date_result})
             self.dataframe = self.dataframe.append(new_series, ignore_index=True)
-        final_str = date_result.strftime("%Y-%m-%d")
+
 
     def extract_times(self):
         time_tuples = filter_times(self.pdf_page.triples)

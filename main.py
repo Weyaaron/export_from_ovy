@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from src.pdfminer.mine import load_pdf
+from src.mine import load_pdf
 
-from src.zyklus import Zyklus
+from src.classes.zyklus import Zyklus
 
 
 def load():
