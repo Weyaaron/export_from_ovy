@@ -122,7 +122,6 @@ class Zyklus:
         def map_bleeding(date_arg):
             length_type = {13:2,7:3, 14:1}
 
-
             match_str = date_arg.strftime("%d.%m") + "."
             try:
                 shape= result[match_str]
@@ -137,17 +136,35 @@ class Zyklus:
 
         self.dataframe["bleeding.exclude"] = self.dataframe["date"].map(map_false)
 
-    def extract_mukus_values(self, page_nmbr: int)->None:
-
-        triples = load_triples_from_page('./data/data.pdf',page_nmbr)
+    def extract_mukus_values(self,):
+        triples = self.pdf_page.triples
         date_triples  = filter_dates(triples)
-
-        tuples_found = []
 
         allowed_values = ["S","t","S+"]
         str_values_present = [el for el in triples if el[2] in allowed_values ]
 
         bound_values = bind_dates_with_data(date_triples, str_values_present)
 
-        if len(str_values_present) != len(tuples_found):
-            raise ValueError
+        def map_feeling(arg):
+            match_str = arg.strftime("%d.%m") + "."
+            if match_str in bound_values.keys():
+                return 1
+            return 0
+
+        def map_texture(arg):
+            match_str = arg.strftime("%d.%m") + "."
+            try:
+                value = bound_values[match_str]
+                if "+" in value:
+                    return 2
+                return 1
+            except KeyError:
+                return 0
+
+        def map_false(arg):
+            return False
+
+        self.dataframe["mucus.feeling"] = self.dataframe["date"].map(map_feeling)
+        self.dataframe["mucus.texture"] = self.dataframe["date"].map(map_texture)
+        self.dataframe["mucus.exclude"] = self.dataframe["date"].map(map_false)
+        pass

@@ -22,6 +22,7 @@ def load():
         new_zyklus.extract_times()
         new_zyklus.extract_bleeding_values()
         new_zyklus.extract_temps()
+        new_zyklus.extract_mukus_values()
         new_zyklus.dataframe.set_index('date', inplace=True)
         new_zyklus.dataframe["temperature.value"].dropna(inplace=True)
         new_zyklus.dataframe["temperature.time"].dropna(inplace=True)
