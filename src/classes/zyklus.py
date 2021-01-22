@@ -117,17 +117,20 @@ class Zyklus:
             match_str = arg.strftime("%d.%m") + "."
             if match_str in bound_values.keys():
                 return 1
-            return 0
+            return None
 
         def map_texture(arg):
             match_str = arg.strftime("%d.%m") + "."
             try:
                 value = bound_values[match_str]
+                #todo: Explore the none value
+                if value == 'None':
+                    return None
                 if "+" in value:
                     return 2
                 return 1
             except KeyError:
-                return 0
+                return None
 
         def map_false(arg):
             return False
