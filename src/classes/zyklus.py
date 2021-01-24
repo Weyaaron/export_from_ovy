@@ -24,12 +24,11 @@ class Zyklus:
         bound_temps = bind_dates_with_data(date_triples, temp_triples)
 
         def map_temp(key_el):
-
             match_str = key_el.strftime("%d.%m") + "."
-            try:
-                return bound_temps[match_str]
-            except KeyError:
-                return "None"
+            value= bound_temps[match_str]
+            if value is None:
+                return 'None'
+            return value
 
         def map_false(arg):
             return False
@@ -92,7 +91,7 @@ class Zyklus:
             try:
                 shape = result[match_str]
             except KeyError:
-                return 0
+                return None
             return length_type[len(shape.path)]
 
         self.dataframe["bleeding.value"] = self.dataframe["date"].map(map_bleeding)
@@ -108,7 +107,7 @@ class Zyklus:
         triples = self.pdf_page.triples
         date_triples = filter_dates(triples)
 
-        allowed_values = ["S", "t", "S+"]
+        allowed_values = ["S", "S+"]
         str_values_present = [el for el in triples if el[2] in allowed_values]
 
         bound_values = bind_dates_with_data(date_triples, str_values_present)
@@ -117,20 +116,22 @@ class Zyklus:
             match_str = arg.strftime("%d.%m") + "."
             if match_str in bound_values.keys():
                 return 1
-            return None
+            return 0
 
         def map_texture(arg):
             match_str = arg.strftime("%d.%m") + "."
+
             try:
                 value = bound_values[match_str]
                 #todo: Explore the none value
-                if value == 'None':
-                    return None
-                if "+" in value:
-                    return 2
-                return 1
             except KeyError:
                 return None
+
+            if value == "S+":
+                return 2
+            if value == "S":
+                return 1
+            return 0
 
         def map_false(arg):
             return False
@@ -138,4 +139,6 @@ class Zyklus:
         self.dataframe["mucus.feeling"] = self.dataframe["date"].map(map_feeling)
         self.dataframe["mucus.texture"] = self.dataframe["date"].map(map_texture)
         self.dataframe["mucus.exclude"] = self.dataframe["date"].map(map_false)
-        pass
+        self.dataframe["mucus.value"]  = self.dataframe["mucus.feeling"] + self.dataframe["mucus.texture"]
+
+
