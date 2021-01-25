@@ -2,6 +2,14 @@ from typing import List
 import pandas as pd
 
 
+
+
+def read_template()->str:
+
+    with open('./template.csv', 'r') as file:
+        return file.read()
+
+
 def bind_dates_with_data(date_triples, data_triples) -> dict:
     result = {}
     for tuple_date_el in date_triples:

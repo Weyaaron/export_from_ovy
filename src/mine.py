@@ -3,7 +3,6 @@ from typing import List
 
 import minecart
 
-
 from pathlib import Path
 
 from src.classes.pdfpagecontainer import PdfPageContainer
